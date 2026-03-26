@@ -1,0 +1,103 @@
+// Prisma schema for CYBERFORGE store
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Товары (ПК)
+model Product {
+  id               String   @id @default(cuid())
+  name             String
+  slug             String   @unique
+  type             String   // gaming, workstation, creator, office
+  description      String
+  shortDescription String
+  price            Int
+  originalPrice    Int?
+  images           String   // JSON array of image URLs
+  inStock          Boolean  @default(true)
+  isNew            Boolean  @default(false)
+  isFeatured       Boolean  @default(false)
+  rating           Float    @default(4.5)
+  reviewsCount     Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Характеристики
+  cpu          String  @default("")
+  cpuCores     Int     @default(0)
+  cpuThreads   Int     @default(0)
+  gpu          String  @default("")
+  gpuMemory    Int     @default(0)
+  ram          String  @default("")
+  ramSize      Int     @default(0)
+  ramType      String  @default("DDR5")
+  storage      String  @default("")
+  storageSize  Int     @default(0)
+  storageType  String  @default("NVMe")
+  pcCase       String  @default("") @map("case")
+  psu          String  @default("")
+  cooling      String  @default("")
+  motherboard  String  @default("")
+
+  // Связи
+  orderItems OrderItem[]
+
+  @@map("products")
+}
+
+// Заказы
+model Order {
+  id            String   @id @default(cuid())
+  orderNumber   String   @unique
+  status        String   @default("pending") // pending, processing, shipped, delivered, cancelled
+  customerName  String
+  customerEmail String
+  customerPhone String
+  address       String
+  city          String
+  postalCode    String
+  totalAmount   Int
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  items         OrderItem[]
+  
+  @@map("orders")
+}
+
+// Товары в заказе
+model OrderItem {
+  id           String  @id @default(cuid())
+  orderId      String
+  productId    String?
+  quantity     Int     @default(1)
+  price        Int
+  customConfig String? // JSON для кастомной сборки
+  productName  String
+  
+  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product      Product? @relation(fields: [productId], references: [id])
+  
+  @@map("order_items")
+}
+
+// Контактные сообщения
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  
+  @@map("contact_messages")
+}
